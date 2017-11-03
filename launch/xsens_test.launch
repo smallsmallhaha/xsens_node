@@ -1,0 +1,7 @@
+<launch>
+  
+  <node pkg="xsens_node" type="xsens_node" name="xsens_node">
+    <param name="port" type="string" value="/dev/ttyUSB0"/>
+  </node>
+  
+</launch>
