@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 {
 	DeviceClass device;
 	
-	ros::init(argc, argv, "imuPAGS");
+	ros::init(argc, argv, "ros_node");
 	ros::NodeHandle n;
 	ros::Publisher imu_pub = n.advertise<sensor_msgs::Imu>("imu", 100);
 	ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odometry",100);
@@ -218,6 +218,7 @@ int main(int argc, char* argv[])
 
 void publishImu(ros::Publisher &publisher,XsDataPacket &packet)
 {
+	auto quat=packet.orientationQuaternion();
 	auto gyro=packet.calibratedGyroscopeData();
 	auto acce=packet.calibratedAcceleration();
 	
@@ -225,17 +226,23 @@ void publishImu(ros::Publisher &publisher,XsDataPacket &packet)
 	imu.header.stamp = ros::Time::now();
 	imu.header.frame_id = "imu_link";
 	
-	//set the angular_velocity				
+	// set orientation
+	imu.orientation.x = quat.x();
+	imu.orientation.y = quat.y();
+	imu.orientation.z = quat.z();
+	imu.orientation.w = quat.w();
+	
+	// set angular velocity (rad/s)
 	imu.angular_velocity.x=gyro[0];
 	imu.angular_velocity.y=gyro[1];
 	imu.angular_velocity.z=gyro[2];
 	
-	//set the  linear_acceleration
+	// set linear acceleration (m/s2)
 	imu.linear_acceleration.x=acce[0];
 	imu.linear_acceleration.y=acce[1];
 	imu.linear_acceleration.z=acce[2];
 
-	//publish the message
+	// publish the message
 	publisher.publish(imu);
 }
 
@@ -280,12 +287,10 @@ void publishOdom(ros::Publisher &publisher, XsDataPacket &packet)
 	odom.pose.pose.position.y=XYZ[1];
 	odom.pose.pose.position.z=XYZ[2];
 
-	//set the angular_velocity				
 	odom.twist.twist.angular.x=gyro[0];
 	odom.twist.twist.angular.y=gyro[1];
 	odom.twist.twist.angular.z=gyro[2];
 
-	//set the  linear_acceleration
 	odom.twist.twist.linear.x=acce[0];
 	odom.twist.twist.linear.y=acce[1];
 	odom.twist.twist.linear.z=acce[2];

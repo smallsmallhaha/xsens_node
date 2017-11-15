@@ -1,2 +1,1 @@
-
-drive of xsens 710
+minimum driver for xsens-G710
