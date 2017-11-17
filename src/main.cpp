@@ -50,6 +50,7 @@
 
 char logger_msg_buffer[128];
 const XsReal PI=3.141592653589;
+ros::Time time_of_receive_msg;
 
 // publish sensor_msgs::Imu message
 void publishImu(ros::Publisher &publisher,XsDataPacket &packet);
@@ -147,6 +148,7 @@ int main(int argc, char* argv[])
 			while (ros::ok())
 			{
 				device.readDataToBuffer(data);
+				time_of_receive_msg = ros::Time::now();
 				device.processBufferedData(data, msgs);
 				for (XsMessageArray::iterator it = msgs.begin(); it != msgs.end(); ++it)
 				{
@@ -223,7 +225,7 @@ void publishImu(ros::Publisher &publisher,XsDataPacket &packet)
 	auto acce=packet.calibratedAcceleration();
 	
 	sensor_msgs::Imu imu;
-	imu.header.stamp = ros::Time::now();
+	imu.header.stamp = time_of_receive_msg;
 	imu.header.frame_id = "imu_link";
 	
 	// set orientation
@@ -273,7 +275,7 @@ void publishOdom(ros::Publisher &publisher, XsDataPacket &packet)
 	nav_msgs::Odometry odom;
 	
 	odom.child_frame_id="base_link";
-	odom.header.stamp=ros::Time::now();
+	odom.header.stamp=time_of_receive_msg;
 	odom.header.frame_id="odom";
 	
 	odom.pose.pose.orientation.x=quat.x();
