@@ -50,8 +50,8 @@
 
 char logger_msg_buffer[128];
 const XsReal PI=3.141592653589;
-ros::WallTime time_of_receive_msg;
-const double _time_out = 0.5;
+const double TIMEOUT_OF_RECV_MSG = 0.5;
+ros::WallTime time_of_recv_msg;
 
 inline ros::WallTime getCurrentTime() { return ros::WallTime::now(); }
 
@@ -63,8 +63,6 @@ void publishOdom(ros::Publisher &publisher, XsDataPacket &packet);
 
 int main(int argc, char* argv[])
 {
-	DeviceClass device;
-	
 	ros::init(argc, argv, "ros_node");
 	ros::NodeHandle n;
 	ros::Publisher imu_pub = n.advertise<sensor_msgs::Imu>("imu", 100);
@@ -73,6 +71,7 @@ int main(int argc, char* argv[])
 	std::string portName;;
 	n.param<std::string>("port", portName, "/dev/ttyUSB0");
 
+	DeviceClass device;	
 	try
 	{
 		XsPortInfo mtPort(portName, XsBaud::numericToRate(115200));
@@ -148,19 +147,19 @@ int main(int argc, char* argv[])
 
 			XsByteArray data;
 			XsMessageArray msgs;
-			// initialize time_of_receive_msg in case of program exits at first loop
-			time_of_receive_msg = getCurrentTime();
+			// initialize time_of_recv_msg in case of program exits at first loop
+			time_of_recv_msg = getCurrentTime();
 			while (ros::ok())
 			{
 				device.readDataToBuffer(data);
 				device.processBufferedData(data, msgs);
 				if(msgs.empty()) {
-				  // if new message not arrive in _time_out seconds, exit the program
-				  if((getCurrentTime() - time_of_receive_msg).toSec() > _time_out){
+				  // if new message not arrive in TIMEOUT_OF_RECV_MSG seconds, exit the program
+				  if((getCurrentTime() - time_of_recv_msg).toSec() > TIMEOUT_OF_RECV_MSG){
 				    throw std::runtime_error("USB DEVICE CLOSED.");
 				  }
 				} else {
-				  time_of_receive_msg = getCurrentTime();				  
+				  time_of_recv_msg = getCurrentTime();				  
 				}
 				for (XsMessageArray::iterator it = msgs.begin(); it != msgs.end(); ++it)
 				{
@@ -237,7 +236,7 @@ void publishImu(ros::Publisher &publisher,XsDataPacket &packet)
 	auto acce=packet.calibratedAcceleration();
 	
 	sensor_msgs::Imu imu;
-	imu.header.stamp.fromNSec(time_of_receive_msg.toNSec());
+	imu.header.stamp.fromNSec(time_of_recv_msg.toNSec());
 	imu.header.frame_id = "imu_link";
 	
 	// set orientation
@@ -287,7 +286,7 @@ void publishOdom(ros::Publisher &publisher, XsDataPacket &packet)
 	nav_msgs::Odometry odom;
 	
 	odom.child_frame_id="base_link";
-	odom.header.stamp.fromNSec(time_of_receive_msg.toNSec());
+	odom.header.stamp.fromNSec(time_of_recv_msg.toNSec());
 	odom.header.frame_id="odom";
 	
 	odom.pose.pose.orientation.x=quat.x();
