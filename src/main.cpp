@@ -51,6 +51,7 @@
 char logger_msg_buffer[128];
 const XsReal PI=3.141592653589;
 ros::Time time_of_receive_msg;
+const double _time_out = 0.5;
 
 // publish sensor_msgs::Imu message
 void publishImu(ros::Publisher &publisher,XsDataPacket &packet);
@@ -145,11 +146,20 @@ int main(int argc, char* argv[])
 
 			XsByteArray data;
 			XsMessageArray msgs;
+			// initialize time_of_receive_msg in case of program exits at first loop
+			time_of_receive_msg = ros::Time::now();
 			while (ros::ok())
 			{
 				device.readDataToBuffer(data);
-				time_of_receive_msg = ros::Time::now();
 				device.processBufferedData(data, msgs);
+				if(msgs.empty()) {
+				  // if new message not arrive in _time_out seconds, exit the program
+				  if((ros::Time::now() - time_of_receive_msg).toSec() > _time_out){
+				    throw std::runtime_error("USB DEVICE CLOSED.");
+				  }
+				} else {
+				  time_of_receive_msg = ros::Time::now();				  
+				}
 				for (XsMessageArray::iterator it = msgs.begin(); it != msgs.end(); ++it)
 				{
 					// Retrieve a packet
