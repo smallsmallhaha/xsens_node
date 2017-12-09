@@ -50,7 +50,7 @@
 
 char logger_msg_buffer[128];
 const XsReal PI=3.141592653589;
-const double TIMEOUT_OF_RECV_MSG = 0.5;
+const double TIMEOUT_OF_RECV_MSG = 1.5;
 ros::WallTime time_of_recv_msg;
 
 inline ros::WallTime getCurrentTime() { return ros::WallTime::now(); }
