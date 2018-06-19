@@ -1,7 +1,7 @@
 <launch>
-  
   <node pkg="xsens_node" type="xsens_node" name="xsens_node">
     <param name="port" type="string" value="/dev/ttyUSB0"/>
+    <param name="imu_frame_id" type="string" value="imu_link"/>
+    <param name="imu_frequency" type="int" value="100"/>
   </node>
-  
 </launch>
